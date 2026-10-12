@@ -8,45 +8,34 @@ pipeline {
 
   stages {
     stage('Checkout') {
-      steps {
-        checkout scm
-      }
+      steps { checkout scm }
     }
 
     stage('Build') {
-      steps {
-        bat 'echo "Build di Windows"'
-      }
+      steps { bat 'echo "Build di Windows"' }
     }
 
     stage('Build Docker Image') {
-      steps {
-        bat 'docker build -t %IMAGE_NAME%:%BUILD_NUMBER% .'
-      }
+      steps { bat "docker build -t %IMAGE_NAME%:%BUILD_NUMBER% ." }
     }
 
     stage('Push Docker Image') {
-  steps {
-    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials',
-        usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-      powershell '''
-        $env:DOCKER_PASS | docker login -u $env:DOCKER_USER --password-stdin
-        if ($LASTEXITCODE -ne 0) { exit 1 }
-        docker push frhs06/simple-app:$env:BUILD_NUMBER
-        docker tag frhs06/simple-app:$env:BUILD_NUMBER frhs06/simple-app:latest
-        docker push frhs06/simple-app:latest
-      '''
-    }
-  }
-}
-
-          bat 'docker push %IMAGE_NAME%:%BUILD_NUMBER%'
-
-          bat 'docker tag %IMAGE_NAME%:%BUILD_NUMBER% %IMAGE_NAME%:latest'
-
-          bat 'docker push %IMAGE_NAME%:latest'
+      steps {
+        withCredentials([usernamePassword(credentialsId: REGISTRY_CREDENTIALS,
+            usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+          powershell '''
+            $env:DOCKER_PASS | docker login -u $env:DOCKER_USER --password-stdin
+            if ($LASTEXITCODE -ne 0) { exit 1 }
+            docker push "$env:IMAGE_NAME`:$env:BUILD_NUMBER"
+            docker tag "$env:IMAGE_NAME`:$env:BUILD_NUMBER" "$env:IMAGE_NAME`:latest"
+            docker push "$env:IMAGE_NAME`:latest"
+          '''
         }
       }
     }
+  }
+
+  post {
+    always { echo 'Selesai build' }
   }
 }
