@@ -1,4 +1,4 @@
-
+```groovy
 pipeline {
   agent any
 
@@ -33,12 +33,22 @@ pipeline {
           usernameVariable: 'DOCKER_USER',
           passwordVariable: 'DOCKER_PASS'
         )]) {
-          powershell '$env:DOCKER_PASS | docker login -u $env:DOCKER_USER --password-stdin'
-          bat 'docker push %IMAGE_NAME%:%BUILD_NUMBER%'
-          bat 'docker tag %IMAGE_NAME%:%BUILD_NUMBER% %IMAGE_NAME%:latest'
-          bat 'docker push %IMAGE_NAME%:latest'
+          powershell '''
+            if ($env:DOCKER_USER -ne "frhs06") {
+              Write-Host "Username Jenkins tidak sesuai"
+              exit 1
+            }
+
+            if ([string]::IsNullOrWhiteSpace($env:DOCKER_PASS)) {
+              Write-Host "Password Jenkins kosong"
+              exit 1
+            }
+
+            Write-Host "Username sesuai dan password tersedia"
+          '''
         }
       }
     }
   }
 }
+```
