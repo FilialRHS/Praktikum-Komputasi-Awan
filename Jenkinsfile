@@ -24,7 +24,9 @@ pipeline {
         withCredentials([usernamePassword(credentialsId: REGISTRY_CREDENTIALS,
             usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
           powershell '''
-            $env:DOCKER_PASS | docker login -u $env:DOCKER_USER --password-stdin
+            $env:DOCKER_PASS | Write-Output "user=$env:DOCKER_USER"
+            Write-Output "pass_length=$($env:DOCKER_PASS.Length)"
+            Write-Output "starts_dckr=$($env:DOCKER_PASS.StartsWith('dckr_pat_'))" docker login -u $env:DOCKER_USER --password-stdin
             if ($LASTEXITCODE -ne 0) { exit 1 }
             docker push "$env:IMAGE_NAME`:$env:BUILD_NUMBER"
             docker tag "$env:IMAGE_NAME`:$env:BUILD_NUMBER" "$env:IMAGE_NAME`:latest"
