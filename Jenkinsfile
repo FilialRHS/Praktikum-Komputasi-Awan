@@ -19,7 +19,7 @@ pipeline {
       steps { bat "docker build -t %IMAGE_NAME%:%BUILD_NUMBER% ." }
     }
 
-        stage('Push Docker Image') {
+    stage('Push Docker Image') {
       steps {
         withCredentials([usernamePassword(credentialsId: REGISTRY_CREDENTIALS,
             usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
@@ -40,6 +40,7 @@ pipeline {
         }
       }
     }
+  }
 
   post {
     always { echo 'Selesai build' }
