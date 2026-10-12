@@ -26,18 +26,19 @@ pipeline {
     }
 
     stage('Push Docker Image') {
-      steps {
-        withCredentials([usernamePassword(
-          credentialsId: 'dockerhub-credentials',
-          usernameVariable: 'DOCKER_USER',
-          passwordVariable: 'DOCKER_PASS'
-        )]) {
-          powershell '''
-            $env:DOCKER_PASS | docker login -u $env:DOCKER_USER --password-stdin
-            if ($LASTEXITCODE -ne 0) {
-              exit $LASTEXITCODE
-            }
-          '''
+  steps {
+    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials',
+        usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+      powershell '''
+        $env:DOCKER_PASS | docker login -u $env:DOCKER_USER --password-stdin
+        if ($LASTEXITCODE -ne 0) { exit 1 }
+        docker push frhs06/simple-app:$env:BUILD_NUMBER
+        docker tag frhs06/simple-app:$env:BUILD_NUMBER frhs06/simple-app:latest
+        docker push frhs06/simple-app:latest
+      '''
+    }
+  }
+}
 
           bat 'docker push %IMAGE_NAME%:%BUILD_NUMBER%'
 
